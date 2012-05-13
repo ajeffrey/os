@@ -3,8 +3,10 @@
 #include <string.h>
 #include <errno.h>
 
-#define MBR_SIZE 510
-#define BOOTLOADER_SIZE 440
+#define BOOTSTRAP_SIZE    510
+#define BOOTINFO_SIZE     90
+#define SECTOR_SIZE       512
+#define JMP_SIZE          3
 
 int main(int argc, char* argv[]) {
   // verify usage and arguments
@@ -18,7 +20,7 @@ int main(int argc, char* argv[]) {
   
   // open handles to the disk image and the FAT bootstrap
   if(bootstraph == NULL) {
-    fprintf(stderr, "Failed to open MBR bootstrap file: %s\n\n", strerror(errno));
+    fprintf(stderr, "Failed to open FAT bootstrap file: %s\n\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
   
@@ -31,22 +33,34 @@ int main(int argc, char* argv[]) {
   fseek(bootstraph, 0, SEEK_END);
   int filesize = ftell(bootstraph);
   
-  if(MBR_SIZE < filesize) {
-    fprintf(stderr, "MBR bootstrap file too large!\n\n");
+  if(BOOTSTRAP_SIZE < filesize) {
+    fprintf(stderr, "FAT bootstrap file too large!\n\n");
     exit(EXIT_FAILURE);
   }
   
   fseek(bootstraph, 0, SEEK_SET);
   fseek(diskh, 0, SEEK_SET);
   
-  char buf[BOOTLOADER_SIZE];
+  // write the JMP instruction
+  char jmp[JMP_SIZE];
+  fread(jmp, JMP_SIZE, 1, bootstraph);
+  fwrite(jmp, JMP_SIZE, 1, diskh);
   
-  if(fread(buf, 1, BOOTLOADER_SIZE, bootstraph) < BOOTLOADER_SIZE) {
+  // memoize the size of the bootstrap code
+  int bootstrap_size = filesize - BOOTINFO_SIZE;
+  
+  // seek to the correct place to write the bootstrap code
+  fseek(bootstraph, BOOTINFO_SIZE, SEEK_SET);
+  fseek(diskh, BOOTINFO_SIZE, SEEK_SET);
+  
+  char buf[bootstrap_size];
+  
+  if(fread(buf, 1, bootstrap_size, bootstraph) < bootstrap_size) {
     fprintf(stderr, "Failed to read bootstrap file\n\n");
     exit(EXIT_FAILURE);
   }
   
-  if(fwrite(buf, 1, BOOTLOADER_SIZE, diskh) < BOOTLOADER_SIZE) {
+  if(fwrite(buf, 1, bootstrap_size, diskh) < bootstrap_size) {
     fprintf(stderr, "Failed to write bootstrap\n\n");
     exit(EXIT_FAILURE);
   }

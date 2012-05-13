@@ -5,7 +5,7 @@ CC = gcc
 OUT = setmbr
 
 all: $(OBJS)
-	$(CC) -o $(OUT) $(OBJS) $(OFLAGS)
+	$(CC) -o out/$(OUT) $(OBJS) $(OFLAGS)
   
 obj/%.o: src/%.c
 	$(CC) $(CFLAGS) -o $@ $^

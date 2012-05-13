@@ -1,0 +1,6 @@
+*.o
+*.obj
+disk.img
+bin/*
+obj/*
+out/*

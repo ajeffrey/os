@@ -2,10 +2,10 @@ OBJS = $(patsubst %.c,obj/%.o,$(shell ls src))
 OFLAGS =
 CFLAGS = -Iinc -c
 CC = gcc
-OUT = mkpart
+OUT = setfat
 
 all: $(OBJS)
-	$(CC) -o $(OUT) $(OBJS) $(OFLAGS)
+	$(CC) -o out/$(OUT) $(OBJS) $(OFLAGS)
   
 obj/%.o: src/%.c
 	$(CC) $(CFLAGS) -o $@ $^
